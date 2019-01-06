@@ -24,15 +24,15 @@ class shiba{
     else return false;
   }
 
-  public function zodiak($birthday){
+  public function getZodiac($birthday){
     $birthday = explode('.',$birthday);
     preg_replace('/^0/',' ',$birthday[1],$birthday[1]);
-    $zodiac = ['21.3|20.4' => 'Овен',    '21.4|20.5' => 'Телец',
-               '21.5|21.6' => 'Близнецы','22.6|22.7' => 'Рак',
-               '23.7|23.8' => 'Лев',     '24.8|23.9' => 'Дева',
-               '24.9|23.10' => 'Весы',   '24.10|22.11' => 'Скорпион',
-               '23.11|21.12' => 'Стрелец','22.12|20.1' => 'Козерог',
-               '21.1|18.2' => 'Водолей',  '18.2|20.3' => 'Рыбы'];
+    $zodiac = ['21.3|20.4' => 'Aries', '21.4|20.5' => 'Taurus',
+               '21.5|21.6' => 'Gemini','22.6|22.7' => 'Cancer',
+               '23.7|23.8' => 'Leo',   '24.8|23.9' => 'Virgo',
+               '24.9|23.10' => 'Libra','24.10|22.11' => 'Scorpio',
+               '23.11|21.12' => 'Sagittarius','22.12|20.1' => 'Capricorn',
+               '21.1|18.2' => 'Aquarius ',  '18.2|20.3' => 'Pisces'];
     foreach ($zodiac as $key => $value) {
       $arr = explode('|',$key);
       $arr1 = explode('.',$arr[0]);
@@ -51,7 +51,7 @@ class shiba{
     elseif(strpos($browser, "Chrome") !== false) $browser = "Google Chrome";
     elseif(strpos($browser, "MSIE") !== false)   $browser = "Internet Explorer";
     elseif(strpos($browser, "Safari") !== false) $browser = "Safari";
-    else                                         $browser = "Неизвестный";
+    else                                         $browser = "Unknown";
     return $browser;
   }
 

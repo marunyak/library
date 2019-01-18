@@ -1,6 +1,8 @@
 <?php
 class shiba{
+
   protected $db;
+
   function __construct(){
 
   }
@@ -186,6 +188,54 @@ HTML;
     else if($tagName == 'link') return "<link {$class} href='{$string}'/>";
     else if(preg_match('/h[1-6]/',$tagName,$match)) return "<{$match[0]} {$class}>{$string}</{$match[0]}>";
     else return false;
+  }
+
+  public function has_ssl() {
+   if((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) return true;
+   else return false;
+  }
+
+  public function insertArrRecursive(&$arr,$arr_keys,$main_key,$main_value = '',$tempArr = ''){
+    if($arr_keys[0] == 'main'){
+      if(empty($main_value)) $arr[$main_key]  = [];
+      else                   $arr[$main_key]  = $main_value;
+      return;
+    }
+
+    foreach($arr_keys as $key => $value) {
+      if(empty($tempArr)) $tempArr = &$arr[$value];
+      else                $tempArr = &$tempArr[$value];
+
+      if($value == end($arr_keys)){
+        if(empty($main_value))  $tempArr[$main_key] = [];
+        else                    $tempArr[$main_key] = $main_value;
+        return;
+        }
+      }
+  }
+
+  public function keysArr($arr,$newArr = [], $str = [],$counter = 1){
+    foreach($arr as $key => $val){
+
+      if(!is_array($val)){
+        array_push($str,"[".$key."]");
+        $newArr[implode('',$str)] = $val;
+        if($counter > 1) array_pop($str);
+        else if(count($str) >= 1 && $counter == 1) array_pop($str);
+
+      }
+      else if(is_array($val)){
+        array_push($str,"[".$key."]");
+        $bigArr  = arrS($val,$newArr,$str,++$counter);
+        $newArr  = array_merge($newArr,$bigArr[0]);
+        $str     = $bigArr[1];
+        $counter = $bigArr[2];
+        if($counter > 1)  array_pop($str);
+        --$counter;
+      }
+    }
+    if($counter == 1) return $newArr;
+    else return [$newArr,$str,$counter];
   }
 }
 ?>

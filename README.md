@@ -1,2 +1,2 @@
 # library
- Contains my libraries of functions in different programming languages.
+ Contains my libraries of functions on different programming languages.

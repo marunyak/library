@@ -132,7 +132,7 @@ class AndyLib{
   public function showMsg($arr){
     $body = '';
     if(!empty($arr)){
-      for($arr as $key => $val){
+      foreach($arr as $key => $val){
         $body .= '<div class="'.$key.'">'.$val.'</div>';
       }
       $callback  = <<<HTML

@@ -15,5 +15,10 @@
           $.ajax(options).done(resolve).fail(reject);
         });
     }
-
+    
+    function MinMax(A){
+      return A.filter((item,i)     => i == 0 || i == A.length-1 || (A[i-1] < A[i] || A[i-1] > A[i]))
+              .filter((item,i,arr) => i == 0 || i == arr.length-1 || (arr[i] < arr[i-1] && arr[i] < arr[i+1])
+                || (arr[i-1] < arr[i] && arr[i] > arr[i+1]));
+    }
 })()

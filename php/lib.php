@@ -8,11 +8,11 @@ class AndyLib{
   }
 
   /**
-     *Return factorial of number.
+     * Return factorial of number.
      * @param integer $number The main number
   */
 
-  public function factorl($number,$count = 1){
+  public function factorl($number, $count = 1) {
     while($number > 0)  return factorl($number-1,$count*$number);
     return $count;
   }
@@ -21,16 +21,16 @@ class AndyLib{
      * Return unique id.
   */
 
-  public function unqID(){
+  public function unqID() {
     return uniqid(md5(md5(time())));
   }
 
   /**
-     *Return month.
+     * Return month.
      * @param integer $month Number of month
   */
 
-  public function getMonth($month){
+  public function getMonth($month) {
     $month = intval($month);
     $monthes = [1 => 'January',2 => 'February',3 => 'March',
                 4 => 'April',  5 => 'May',6 => 'June',7 => 'July',
@@ -41,11 +41,11 @@ class AndyLib{
   }
 
   /**
-     *Return zodiak.
+     * Return zodiak.
      * @param string $birthday 'Day.Month'
   */
 
-  public function zodiak($birthday){
+  public function zodiak($birthday) {
     $birthday = explode('.',$birthday);
     preg_replace('/^0/',' ',$birthday[1],$birthday[1]);
     $zodiac = ['21.3|20.4'   => 'Овен',    '21.4|20.5'   => 'Телец',
@@ -58,8 +58,8 @@ class AndyLib{
       $arr = explode('|',$key);
       $arr1 = explode('.',$arr[0]);
       $arr2 = explode('.',$arr[1]);
-      if((intval($arr1[1]) === intval($birthday[1]) && intval($arr1[0]) <= intval($birthday[0])) ||
-         (intval($arr2[1]) === intval($birthday[1]) && intval($arr2[0]) >= intval($birthday[0]))){
+      if ((intval($arr1[1]) === intval($birthday[1]) && intval($arr1[0]) <= intval($birthday[0])) ||
+         (intval($arr2[1]) === intval($birthday[1]) && intval($arr2[0]) >= intval($birthday[0]))) {
            return $value;
          }
     }
@@ -67,11 +67,11 @@ class AndyLib{
   }
 
   /**
-     *Return your name of browser.
+     * Return your name of browser.
      * @param string $browser Take information from $_SERVER ['HTTP_USER_AGENT']
   */
 
-  public function getBrowser($browser){
+  public function getBrowser($browser) {
     if(strpos($browser, "Firefox")    !== false) $browser = "Mozilla Firefox";
     elseif(strpos($browser, "Opera")  !== false) $browser = "Opera";
     elseif(strpos($browser, "Chrome") !== false) $browser = "Google Chrome";
@@ -82,57 +82,57 @@ class AndyLib{
   }
 
   /**
-     *Return var_dumped in comfortable form.
+     * Return var_dumped in comfortable form.
      * @param mixed $var Take any information
   */
 
-  public function dump($var){
+  public function dump($var) {
     echo '<pre>';
     var_dump($var);
     echo '</pre>';
   }
 
   /**
-     *Return file or matches if its exists.
+     * Return file or matches if its exists.
      * @param string $file Name of file
-     * @param string $dir  Path of directory 
+     * @param string $dir  Path of directory
   */
 
-  public function findFile($file,$dir){
+  public function findFile($file, $dir) {
     $dir_hndl = opendir($dir);
-    while(($name = readdir($dir_hndl)) !== false){
-      if($name == '.' || $name == '..') continue;
-      if(is_dir($dir.'/'.$name)) findFile($file,$dir.'/'.$name);
-      else if(is_file($dir.'/'.$name) && $file === $name) echo $dir.'/'.$name.'<br>';
+    while (($name = readdir($dir_hndl)) !== false) {
+      if ($name == '.' || $name == '..') continue;
+      if (is_dir($dir.'/'.$name)) findFile($file,$dir.'/'.$name);
+      else if (is_file($dir.'/'.$name) && $file === $name) echo $dir.'/'.$name.'<br>';
     }
     closedir($dir_hndl);
   }
 
   /**
-     *Return directory or matches if its exists.
-     * @param string $dirr Name of directory 
-     * @param string $dir  Path of directory 
+     * Return directory or matches if its exists.
+     * @param string $dirr Name of directory
+     * @param string $dir  Path of directory
   */
 
-  public function findDirectory($dirr,$dir){
+  public function findDirectory($dirr, $dir) {
   $dir_hndl = opendir($dir);
-    while(($name = readdir($dir_hndl)) !== false){
-      if($name == '.' || $name == '..') continue;
-      if(is_dir($dir.'/'.$name)  && $dirr === $name) echo $dir.'/'.$name.'<br>';
-      if(is_dir($dir.'/'.$name)) findDirectory($dirr,$dir.'/'.$name);
+    while (($name = readdir($dir_hndl)) !== false) {
+      if ($name == '.' || $name == '..') continue;
+      if (is_dir($dir.'/'.$name)  && $dirr === $name) echo $dir.'/'.$name.'<br>';
+      if (is_dir($dir.'/'.$name)) findDirectory($dirr,$dir.'/'.$name);
     }
     closedir($dir_hndl);
   }
 
   /**
-     *Show Message.
+     * Show Message.
      * @param array $arr where $key is name of class, $val is value of div
   */
 
-  public function showMsg($arr){
+  public function showMsg($arr) {
     $body = '';
-    if(!empty($arr)){
-      foreach($arr as $key => $val){
+    if (!empty($arr)) {
+      foreach($arr as $key => $val) {
         $body .= '<div class="'.$key.'">'.$val.'</div>';
       }
       $callback  = <<<HTML
@@ -148,10 +148,10 @@ HTML;
   }
 
   /**
-     *Generate unique code
+     * Generate unique code
   */
 
-  public function generateCode(){
+  public function generateCode() {
     $string = 'abcdefghijklmnopqrstuvwyzABCDEFGHIJKLMNOPQRSTUVWYZ0123456789';
     $count = rand(4,7);
     $str = '';
@@ -165,41 +165,41 @@ HTML;
   }
 
   /**
-    *Return string without &amp;
+    * Return string without &amp;
     * @param string $sUrl url
   */
 
-  public function cleanAmp($sUrl){
+  public function cleanAmp($sUrl) {
     return str_replace('&', '&amp;', $sUrl);
   }
 
   /**
-    *Return your age;
+    * Return your age;
     * @param integer $day day
     * @param integer $month month
     * @param integer $year year
   */
 
-  public function getAge($day,$month,$year){
-    if($month > date('m') || ($month == date('m') && $day > date('d'))) return (date('Y') - $year - 1);
+  public function getAge($day, $month, $year) {
+    if ($month > date('m') || ($month == date('m') && $day > date('d'))) return (date('Y') - $year - 1);
     else return (date('Y') - $year);
   }
 
   /**
-    *Return ip
+    * Return ip
   */
 
-  public function getIp(){
+  public function getIp() {
     if      (filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV4)) return filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV4);
     else if (filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV6)) return filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV6);
     else return 'localhost';
   }
 
   /**
-    *Return current host
+    * Return current host
   */
 
-  public function getHost(){
+  public function getHost() {
     $Url = $_SERVER['HTTP_HOST'];
     $url = str_replace('https://','',$Url);
     $url = str_replace('http://','',$Url);
@@ -209,18 +209,18 @@ HTML;
   }
 
   /**
-    *Set cache;
+    * Set cache;
     * @param string $name name of cache file
     * @param array  $arr array with information
     * @param string $conf path to cache file
-    * @param integer $time time of rewrite cache 
+    * @param integer $time time of rewrite cache
   */
 
-  public function setCache($name,$arr,$conf = '../localhost/cache/',$time = 30){
-    if(!is_dir($conf)) mkdir($conf, 0750, true);
-    if(is_array($arr) || is_int($arr)){
-      if(file_exists($conf.$name.'.sys') && (filemtime($conf.$name.'.sys') > (time() - 60 * $time))) @file_put_contents($conf.$name.'.sys',serialize($arr));
-      else{
+  public function setCache($name, $arr, $conf = '../localhost/cache/', $time = 30) {
+    if (!is_dir($conf)) mkdir($conf, 0750, true);
+    if (is_array($arr) || is_int($arr)) {
+      if (file_exists($conf.$name.'.sys') && (filemtime($conf.$name.'.sys') > (time() - 60 * $time))) @file_put_contents($conf.$name.'.sys',serialize($arr));
+      else {
         $fp = fopen($conf.$name.'.sys', 'wb+');
         fwrite($fp, serialize($arr));
         fclose($fp);
@@ -230,16 +230,16 @@ HTML;
   }
 
   /**
-    *Get cache;
+    * Get cache;
     * @param string $name name of cache file
     * @param array  $arr array with information
   */
 
-  public function getCache($name,$conf = '../localhost/cache/'){
-    if(!is_dir($conf)) return false;
-    if(file_exists($conf.$name.'.sys')){
+  public function getCache($name, $conf = '../localhost/cache/') {
+    if (!is_dir($conf)) return false;
+    if (file_exists($conf.$name.'.sys')) {
       $data = @file_get_contents($conf.$name.'.sys');
-      if($data){
+      if ($data) {
         return unserialize($data);
       }
     }
@@ -247,16 +247,16 @@ HTML;
   }
 
   /**
-    *Writing logs
+    * Writing logs
     * @param string  $name name of log file
     * @param string  $msg log information
     * @param string  $conf path to log file
   */
 
-  public function logs($name,$msg,$conf = '../localhost/logs/'){
+  public function logs($name, $msg, $conf = '../localhost/logs/') {
     $path = $conf.$name.'.log';
-    if(!is_dir($conf)) mkdir($conf, 0750, true);
-    if(file_exists($path)) $array = unserialize(@file_get_contents($path));
+    if (!is_dir($conf)) mkdir($conf, 0750, true);
+    if (file_exists($path)) $array = unserialize(@file_get_contents($path));
     else {
       $fp = fopen($path, 'wb+');
       fclose($fp);
@@ -270,13 +270,13 @@ HTML;
   }
 
   /**
-    *Return tags
+    * Return tags
     * @param string  $tagName name of tag
     * @param string  $string info inside tag
     * @param string  $class name of class
   */
 
-  public function htmlTags($tagName,$string = '',$class = ''){
+  public function htmlTags($tagName, $string = '', $class = '') {
     if(is_array($class))                   $class = implode(' ',$class);
     if($class != '' && $tagName != 'link') $class = "class='{$class}'";
 
@@ -289,7 +289,7 @@ HTML;
   }
 
   /**
-    *Return converted string with UTF-8
+    * Return converted string with UTF-8
     * @param string  $str string
   */
 
@@ -299,12 +299,12 @@ HTML;
   }
 
   /**
-    *Return array with information from .xlsx file
+    * Return array with information from .xlsx file
     * @param string  $file name of xlsx file
     * @param string  $dir  name of directory where PHPExcel file located
   */
 
-  public function importXlsx($file,$dir = ENGINE_DIR."/lib/phpexcel/PHPExcel.php") {
+  public function importXlsx($file, $dir = ENGINE_DIR."/lib/phpexcel/PHPExcel.php") {
     require_once $dir;
     $getFile = PHPExcel_IOFactory::load($file);
     $getFile->setActiveSheetIndex(0);
@@ -312,11 +312,11 @@ HTML;
 
     $array = [];
     $iRow = 0;
-    foreach($aSheet->getRowIterator() as $row) {
+    foreach ($aSheet->getRowIterator() as $row) {
         $iRow++;
         $cellIterator = $row->getCellIterator();
         $iCell = 0;
-        foreach($cellIterator as $key=>$cell) {
+        foreach ($cellIterator as $key=>$cell) {
             $iCell++;
             if($cell->getValue() instanceof PHPExcel_RichText) {
                 $val = $cell->getValue()->getPlainText();
@@ -330,16 +330,16 @@ HTML;
   }
 
   /**
-    *has ssl sertification
+    * Has ssl sertification
   */
 
   public function has_ssl() {
-     if((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) return true;
+     if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) return true;
      else return false;
   }
 
   /**
-    *Return array with information from .xlsx file
+    * Return array with information from .xlsx file
     * @param array   $arr recursive or normal array
     * @param string  $dir  name of directory where PHPExcel file located
     * @param string  $file name of xlsx file
@@ -347,17 +347,17 @@ HTML;
     * @param string  $file name of xlsx file
   */
 
-  public function insertArrRecursive(&$arr,$arr_keys,$main_key,$main_value = '',$tempArr = ''){
-    if($arr_keys[0] == 'main'){
+  public function insertArrRecursive(&$arr,$arr_keys,$main_key,$main_value = '',$tempArr = '') {
+    if ($arr_keys[0] == 'main') {
       if(empty($main_value)) $arr[$main_key]  = [];
       else                   $arr[$main_key]  = $main_value;
       return;
     }
-    foreach($arr_keys as $key => $value) {
-      if(empty($tempArr)) $tempArr = &$arr[$value];
+    foreach ($arr_keys as $key => $value) {
+      if (empty($tempArr)) $tempArr = &$arr[$value];
       else                $tempArr = &$tempArr[$value];
-      if($value == end($arr_keys)){
-        if(empty($main_value))  $tempArr[$main_key] = [];
+      if ($value == end($arr_keys)) {
+        if (empty($main_value))  $tempArr[$main_key] = [];
         else                    $tempArr[$main_key] = $main_value;
         return;
       }
@@ -365,20 +365,20 @@ HTML;
   }
 
   /**
-    *Return chain of keys for select
+    * Return chain of keys for select
     * @param array   $arr  recursive or normal array
     * @param array   $newArr  array with chain of keys
   */
 
-  public function keysArr($arr,$newArr = [], $str = [],$counter = 1){
-    foreach($arr as $key => $val){
-      if(!is_array($val)){
+  public function keysArr($arr, $newArr = [], $str = [], $counter = 1) {
+    foreach ($arr as $key => $val) {
+      if (!is_array($val)) {
         array_push($str,"[".$key."]");
         $newArr[implode('',$str)] = $val;
-        if($counter > 1) array_pop($str);
-        else if(count($str) >= 1 && $counter == 1) array_pop($str);
+        if ($counter > 1) array_pop($str);
+        else if (count($str) >= 1 && $counter == 1) array_pop($str);
       }
-      else if(is_array($val)){
+      else if (is_array($val)) {
         array_push($str,"[".$key."]");
         $bigArr  = keysArr($val,$newArr,$str,++$counter);
         $newArr  = array_merge($newArr,$bigArr[0]);
@@ -388,12 +388,12 @@ HTML;
         --$counter;
       }
     }
-    if($counter == 1) return $newArr;
+    if ($counter == 1) return $newArr;
     else return [$newArr,$str,$counter];
   }
 
   /**
-    *Set new array in .php file
+    * Set new array in .php file
     * @param array    $save_con   array
     * @param string   $file  name of file
     * @param string   $namec  new name of file
@@ -412,7 +412,7 @@ HTML;
 
     $handler = fopen($dir.$file, "w");
     fwrite($handler, "<?php\n\${$namec} += array (\n");
-    foreach($save_con as $name => $value) {
+    foreach ($save_con as $name => $value) {
       $value = str_replace("$", "&#036;", $value);
       $value = str_replace("{", "&#123;", $value);
       $value = str_replace("}", "&#125;", $value);
@@ -429,7 +429,7 @@ HTML;
       $name = str_replace('(', "", $name);
       $name = str_replace(')', "", $name);
       $name = str_ireplace("base64_decode", "base64_dec&#111;de", $name);
-      
+
       fwrite($handler, "\t'{$name}' => '{$value}',\n");
     }
     fwrite($handler, ");\n\n?>");

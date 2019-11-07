@@ -99,58 +99,90 @@
         }
       }
       return sum;
-  }
-
-  /**
-     * Splits text into arrays depending on the number K
-     * @param string text
-     * @param number max length of word
-  */
-
-  function splitsText(S, K){
-    let count = 0;
-    let temp_src = '';
-    let messages = [];
-    if (typeof S != 'string' || S.length > 500  || typeof K != 'number' || (K < 1 || K > 500)) return -1;
-    //S = S.replace(/[,.:;()?!-]/g, '').replace(/\s+/g, " ").trim();
-    let arr = S.trimStart().trimEnd().split(' ');
-
-    for(let i = 0;i < arr.length;i++) {
-
-      if (arr[i].length > K) return -1;
-      count += arr[i].length;
-
-      if (count <= K){
-        if (temp_src.length >= 1) {
-          temp_src += ' ' + arr[i];
-          count++;
-
-          if (count === K) {
-            count = 0;
-            messages.push(temp_src);
-            temp_src = '';
-            continue;
-          }
-
-          if (count > K) {
-            temp_src = temp_src.replace(new RegExp (arr[i], 'g'), '').trimEnd().trimStart();
-            messages.push(temp_src);
-            temp_src = arr[i];
-            count = arr[i].length;
-          }
-        }
-        else temp_src += arr[i];
-      } else {
-        count = 0;
-        messages.push(temp_src);
-        if (arr.length - 1 === i) messages.push(arr[i]);
-        temp_src = '';
-        temp_src += arr[i];
-        count += arr[i].length;
-        continue;
-      }
-      if (arr.length - 1 === i) messages.push(temp_src);
     }
-    return messages;
-  }
+
+    /**
+     * Given an array of integers, return indices of the two numbers such that they add up to a specific target.
+     * @param array
+     * @param number sum of two array items
+    */
+
+    function twoSum(nums, target) {
+      for(let i = 0;i < nums.length;i++) {
+          for(let j = i+1;j < nums.length;j++) {
+              if(nums[i] + nums[j] === target) return [i,j];
+          }
+      }
+    };
+
+    /**
+      * Given a sorted array nums, remove the duplicates in-place such that each element appear only once and return the new length.
+      * @param array nums
+      * @return {number}
+    */
+
+    function removeDuplicates(nums) {
+        if (nums.length === 0) return 0;
+        let i = 0;
+        for (let j = 1; j < nums.length; j++) {
+            if (nums[j] != nums[i]) {
+                i++;
+                nums[i] = nums[j];
+            }
+        }
+        return i + 1;
+    };
+
+    /**
+       * Splits text into arrays depending on the number K
+       * @param string text
+       * @param number max length of word
+    */
+
+    function splitsText(S, K){
+      let count = 0;
+      let temp_src = '';
+      let messages = [];
+      if (typeof S != 'string' || S.length > 500  || typeof K != 'number' || (K < 1 || K > 500)) return -1;
+      //S = S.replace(/[,.:;()?!-]/g, '').replace(/\s+/g, " ").trim();
+      let arr = S.trimStart().trimEnd().split(' ');
+
+      for(let i = 0;i < arr.length;i++) {
+
+        if (arr[i].length > K) return -1;
+        count += arr[i].length;
+
+        if (count <= K){
+          if (temp_src.length >= 1) {
+            temp_src += ' ' + arr[i];
+            count++;
+
+            if (count === K) {
+              count = 0;
+              messages.push(temp_src);
+              temp_src = '';
+              continue;
+            }
+
+            if (count > K) {
+              temp_src = temp_src.replace(new RegExp (arr[i], 'g'), '').trimEnd().trimStart();
+              messages.push(temp_src);
+              temp_src = arr[i];
+              count = arr[i].length;
+            }
+          }
+          else temp_src += arr[i];
+        } else {
+          count = 0;
+          messages.push(temp_src);
+          if (arr.length - 1 === i) messages.push(arr[i]);
+          temp_src = '';
+          temp_src += arr[i];
+          count += arr[i].length;
+          continue;
+        }
+        if (arr.length - 1 === i) messages.push(temp_src);
+      }
+      return messages;
+    }
 })()

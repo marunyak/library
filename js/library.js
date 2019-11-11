@@ -154,6 +154,34 @@
     };
 
     /**
+     * Given an unsorted integer array, find the smallest missing positive integer.
+     * @param {number[]} nums
+     * @return {number}
+    */
+
+    function firstMissingPositive(nums) {
+      let temp = 0;
+      let temp_arr = [];
+      nums.sort(compareNumeric);
+      nums = nums.filter((item) => item > 0);
+      nums.forEach((item) => { if(!temp_arr.includes(item)) temp_arr.push(item);});
+      nums = temp_arr;
+      if (nums[0] !== 1) return 1;
+      for (let j = 0; j < nums.length; j++) {
+           temp = nums[j] + 1;
+          if (j !== nums.length-1 && temp !== nums[j+1]) return ++nums[j];
+      }
+      if (nums[0] == 1) return ++nums[nums.length-1];
+      return 1;
+    };
+
+    function compareNumeric(a, b) {
+      if (a > b) return 1;
+      if (a == b) return 0;
+      if (a < b) return -1;
+    }
+
+    /**
        * Splits text into arrays depending on the number K
        * @param string text
        * @param number max length of word

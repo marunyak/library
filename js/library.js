@@ -182,6 +182,16 @@
     }
 
     /**
+     * Given a valid (IPv4) IP address, return a defanged version of that IP address. A defanged IP address replaces every period "." with "[.]".
+     * @param {string} address
+     * @return {string}
+    */
+
+    function defangIPaddr(address) {
+      return address.replace(/\./g,'[.]');
+    };
+
+    /**
        * Splits text into arrays depending on the number K
        * @param string text
        * @param number max length of word

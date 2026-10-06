@@ -1,246 +1,180 @@
-(function(){
+const INT32_MAX = 2 ** 31 - 1;
+const INT32_MIN = -(2 ** 31);
 
-    /**
-     * Make a delay.
-     * @param number  milliseconds
-    */
+const ROMAN = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
 
-    function delay(milliseconds) {
-        return function(result) {
-          return new Promise(function(resolve, reject) {
-            setTimeout(function() {
-              resolve(result);
-            }, milliseconds);
-          });
-        };
+/**
+ * Make a delay for promise chains: `promise.then(delay(500))`.
+ * @param {number} milliseconds
+ * @returns {<T>(value: T) => Promise<T>} passes the value through after the delay
+ */
+export function delay(milliseconds) {
+  return (value) => new Promise((resolve) => setTimeout(resolve, milliseconds, value));
+}
+
+/**
+ * Make an HTTP request with fetch.
+ * Resolves with parsed JSON when the response is JSON, otherwise with text.
+ * Rejects with an Error carrying `status` and `response` on non-2xx responses,
+ * and with a `TimeoutError` when `timeout` elapses.
+ * @param {string | URL} url
+ * @param {RequestInit & { timeout?: number }} [options] fetch options plus a timeout in ms
+ * @returns {Promise<any>}
+ */
+export async function ajax(url, { timeout, ...init } = {}) {
+  const signals = [init.signal, timeout > 0 && AbortSignal.timeout(timeout)].filter(Boolean);
+  if (signals.length) init.signal = AbortSignal.any(signals);
+
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    const error = new Error(`HTTP ${response.status} ${response.statusText}`.trim());
+    error.status = response.status;
+    error.response = response;
+    throw error;
+  }
+  const type = response.headers.get('content-type') ?? '';
+  return type.includes('json') ? response.json() : response.text();
+}
+
+/**
+ * Return the endpoints and local minima/maxima of a list of heights,
+ * collapsing plateaus to a single point.
+ * @param {number[]} heights
+ * @returns {number[]}
+ */
+export function MinMax(heights) {
+  const points = heights.filter((h, i) => i === 0 || h !== heights[i - 1]);
+  return points.filter((h, i) => i === 0 || i === points.length - 1
+    || Math.sign(h - points[i - 1]) !== Math.sign(points[i + 1] - h));
+}
+
+/**
+ * Parse the leading integer of a string (skipping leading whitespace,
+ * with an optional sign), clamped to the 32-bit signed range.
+ * Returns 0 when the string does not start with a number.
+ * @param {string} str
+ * @returns {number}
+ */
+export function Atoi(str) {
+  const match = /^\s*([+-]?\d+)/.exec(str);
+  if (!match) return 0;
+  return Math.min(INT32_MAX, Math.max(INT32_MIN, Number(match[1]))) || 0;
+}
+
+/**
+ * Convert a roman numeral to a number.
+ * Returns NaN when the string contains a character that is not a roman numeral.
+ * @param {string} s
+ * @returns {number}
+ */
+export function romanToInt(s) {
+  const numeral = s.trim();
+  let sum = 0;
+  for (let i = 0; i < numeral.length; i++) {
+    const value = ROMAN[numeral[i]];
+    if (value === undefined) return NaN;
+    const next = ROMAN[numeral[i + 1]] ?? 0;
+    sum += value < next ? -value : value;
+  }
+  return sum;
+}
+
+/**
+ * Return the indices of the two numbers that add up to `target`, or null if there are none.
+ * @param {number[]} nums
+ * @param {number} target
+ * @returns {[number, number] | null}
+ */
+export function twoSum(nums, target) {
+  const seen = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const j = seen.get(target - nums[i]);
+    if (j !== undefined) return [j, i];
+    if (!seen.has(nums[i])) seen.set(nums[i], i);
+  }
+  return null;
+}
+
+/**
+ * Remove duplicates from a sorted array in place so each element appears once.
+ * @param {number[]} nums sorted array, mutated
+ * @returns {number} the new length; `nums.slice(0, length)` holds the unique values
+ */
+export function removeDuplicates(nums) {
+  if (nums.length === 0) return 0;
+  let i = 0;
+  for (let j = 1; j < nums.length; j++) {
+    if (nums[j] !== nums[i]) {
+      i++;
+      nums[i] = nums[j];
     }
+  }
+  return i + 1;
+}
 
-    /**
-     * Make a ajax request.
-     * @param options for request
-    */
+/**
+ * Return the index of `target` in a sorted array, or the index where it would be inserted.
+ * With duplicates, returns the first matching index.
+ * @param {number[]} nums sorted ascending
+ * @param {number} target
+ * @returns {number}
+ */
+export function searchInsert(nums, target) {
+  let lo = 0;
+  let hi = nums.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (nums[mid] < target) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
 
-    function ajax(options) {
-        return new Promise(function(resolve, reject) {
-          $.ajax(options).done(resolve).fail(reject);
-        });
+/**
+ * Find the smallest positive integer missing from an unsorted array. Does not mutate the input.
+ * @param {number[]} nums
+ * @returns {number}
+ */
+export function firstMissingPositive(nums) {
+  const present = new Set(nums);
+  let candidate = 1;
+  while (present.has(candidate)) candidate++;
+  return candidate;
+}
+
+/**
+ * Defang an IPv4 address by replacing every "." with "[.]".
+ * @param {string} address
+ * @returns {string}
+ */
+export function defangIPaddr(address) {
+  return address.replaceAll('.', '[.]');
+}
+
+/**
+ * Split text into messages of at most K characters without breaking words.
+ * Returns -1 when the input is invalid (S not a string or longer than 500,
+ * K not an integer in 1..500) or a single word is longer than K.
+ * @param {string} S
+ * @param {number} K max message length
+ * @returns {string[] | -1}
+ */
+export function splitsText(S, K) {
+  if (typeof S !== 'string' || S.length > 500 || !Number.isInteger(K) || K < 1 || K > 500) return -1;
+
+  const messages = [];
+  let line = '';
+  for (const word of S.split(/\s+/).filter(Boolean)) {
+    if (word.length > K) return -1;
+    if (!line) {
+      line = word;
+    } else if (line.length + 1 + word.length <= K) {
+      line += ' ' + word;
+    } else {
+      messages.push(line);
+      line = word;
     }
-
-    /**
-     * Return count of min and max heights
-     * @param array array of heights
-    */
-
-    function MinMax(A){
-      return A.filter((item,i)     => i == 0 || i == A.length-1 || (A[i-1] < A[i] || A[i-1] > A[i]))
-              .filter((item,i,arr) => i == 0 || i == arr.length-1 || (arr[i] < arr[i-1] && arr[i] < arr[i+1])
-                || (arr[i-1] < arr[i] && arr[i] > arr[i+1]));
-    }
-
-    /**
-     * Return number from string
-     * @param string array of heights
-    */
-
-    function Atoi(str) {
-      let number = 0;
-      let temp_str = '';
-      str = str.trimStart();
-      if (!str) return number;
-      str = str.split(' ');
-      temp_str = str[0];
-      for (let i = 0;i < temp_str.length;i++) {
-          if (temp_str[0].match(/[a-zA-Z.?*]/)) return number;
-
-          if ((temp_str[0].match(/[a-zA-Z.?*-\/]/) && temp_str.length === 1)
-              || (temp_str[0].match(/[a-zA-Z-+]/) && temp_str[1].match(/[a-zA-Z-+]/))) return number;
-
-          if (temp_str[0] && (temp_str[i] === '-' || temp_str[i] === '+')) {
-              temp += temp_str[i];
-              continue;
-          }
-
-          if (temp_str[i].match(/\D/)) break;
-          temp += temp_str[i];
-      }
-      number = parseInt(temp);
-      if(number >= 2147483648) return 2147483647;
-      if(number <= -2147483648) return -2147483648;
-      return number;
-    }
-
-    /**
-     * Considers the amount of roman number
-     * @param string roman number
-    */
-
-    function romanToInt(s) {
-      const roman = {'I': 1, 'V':5, 'X':10,'L':50,'C':100,'D':500,'M':1000};
-      let sum = 0;
-      let temp = '';
-      str = s.trimStart();
-      arr = str;
-      for(let index = 0; index < arr.length;index++){
-        if (temp === index) {
-            temp = '';
-            continue;
-        }
-        if (arr[index] === 'I' && (arr[index+1] === 'V' || arr[index+1] === 'X')) {
-            sum += roman[arr[index+1]] - roman[arr[index]];
-            temp = index+1;
-        } else if (arr[index] === 'X' && (arr[index+1] === 'L' || arr[index+1] === 'C')) {
-            sum += roman[arr[index+1]] - roman[arr[index]];
-            temp = index+1;
-        } else if (arr[index] === 'C' && (arr[index+1] === 'D' || arr[index+1] === 'M')) {
-            sum += roman[arr[index+1]] - roman[arr[index]];
-            temp = index+1;
-        } else {
-            sum += roman[arr[index]];
-        }
-      }
-      return sum;
-    }
-
-    /**
-     * Given an array of integers, return indices of the two numbers such that they add up to a specific target.
-     * @param array
-     * @param number sum of two array items
-    */
-
-    function twoSum(nums, target) {
-      for(let i = 0;i < nums.length;i++) {
-          for(let j = i+1;j < nums.length;j++) {
-              if(nums[i] + nums[j] === target) return [i,j];
-          }
-      }
-    };
-
-    /**
-      * Given a sorted array nums, remove the duplicates in-place such that each element appear only once and return the new length.
-      * @param array nums
-      * @return {number}
-    */
-
-    function removeDuplicates(nums) {
-        if (nums.length === 0) return 0;
-        let i = 0;
-        for (let j = 1; j < nums.length; j++) {
-            if (nums[j] != nums[i]) {
-                i++;
-                nums[i] = nums[j];
-            }
-        }
-        return i + 1;
-    };
-
-
-    /**
-     * Given a sorted array and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.
-     * @param {number[]} nums
-     * @param {number} target
-     * @return {number}
-    */
-
-    function searchInsert(nums, target) {
-      let num = 0;
-      if (nums.indexOf(target) !== -1) return nums.indexOf(target);
-      for (let i = 0;i < nums.length;i++) {
-          if ((nums[i] < target && nums[i+1] > target)
-              || (nums.length-1 === i && nums[i] < target)) {
-              return i+1;
-          }
-      }
-      return num;
-    };
-
-    /**
-     * Given an unsorted integer array, find the smallest missing positive integer.
-     * @param {number[]} nums
-     * @return {number}
-    */
-
-    function firstMissingPositive(nums) {
-      let temp = 0;
-      let temp_arr = [];
-      nums.sort(compareNumeric);
-      nums = nums.filter((item) => item > 0);
-      nums.forEach((item) => { if(!temp_arr.includes(item)) temp_arr.push(item);});
-      nums = temp_arr;
-      if (nums[0] !== 1) return 1;
-      for (let j = 0; j < nums.length; j++) {
-           temp = nums[j] + 1;
-          if (j !== nums.length-1 && temp !== nums[j+1]) return ++nums[j];
-      }
-      if (nums[0] == 1) return ++nums[nums.length-1];
-      return 1;
-    };
-
-    function compareNumeric(a, b) {
-      if (a > b) return 1;
-      if (a == b) return 0;
-      if (a < b) return -1;
-    }
-
-    /**
-     * Given a valid (IPv4) IP address, return a defanged version of that IP address. A defanged IP address replaces every period "." with "[.]".
-     * @param {string} address
-     * @return {string}
-    */
-
-    function defangIPaddr(address) {
-      return address.replace(/\./g,'[.]');
-    };
-
-    /**
-       * Splits text into arrays depending on the number K
-       * @param string text
-       * @param number max length of word
-    */
-
-    function splitsText(S, K){
-      let count = 0;
-      let temp_src = '';
-      let messages = [];
-      if (typeof S != 'string' || S.length > 500  || typeof K != 'number' || (K < 1 || K > 500)) return -1;
-      //S = S.replace(/[,.:;()?!-]/g, '').replace(/\s+/g, " ").trim();
-      let arr = S.trimStart().trimEnd().split(' ');
-
-      for(let i = 0;i < arr.length;i++) {
-
-        if (arr[i].length > K) return -1;
-        count += arr[i].length;
-
-        if (count <= K){
-          if (temp_src.length >= 1) {
-            temp_src += ' ' + arr[i];
-            count++;
-
-            if (count === K) {
-              count = 0;
-              messages.push(temp_src);
-              temp_src = '';
-              continue;
-            }
-
-            if (count > K) {
-              temp_src = temp_src.replace(new RegExp (arr[i], 'g'), '').trimEnd().trimStart();
-              messages.push(temp_src);
-              temp_src = arr[i];
-              count = arr[i].length;
-            }
-          }
-          else temp_src += arr[i];
-        } else {
-          count = 0;
-          messages.push(temp_src);
-          if (arr.length - 1 === i) messages.push(arr[i]);
-          temp_src = '';
-          temp_src += arr[i];
-          count += arr[i].length;
-          continue;
-        }
-        if (arr.length - 1 === i) messages.push(temp_src);
-      }
-      return messages;
-    }
-})()
+  }
+  if (line) messages.push(line);
+  return messages;
+}

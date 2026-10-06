@@ -9,20 +9,25 @@ class AndyLib{
 
   /**
      * Return factorial of number.
-     * @param integer $number The main number
+     * Results above 20! do not fit in an integer and are returned as float.
+     * @param integer $number The main number, must be >= 0
+     * @param integer $count  Accumulator for the recursion
+     * @throws InvalidArgumentException When $number is negative
   */
 
   public function factorl($number, $count = 1) {
-    while($number > 0)  return factorl($number-1,$count*$number);
-    return $count;
+    $number = (int) $number;
+    if ($number < 0) throw new InvalidArgumentException('Factorial is not defined for negative numbers');
+    if ($number === 0) return $count;
+    return $this->factorl($number - 1, $count * $number);
   }
 
   /**
-     * Return unique id.
+     * Return unique id (32 hex chars, cryptographically random).
   */
 
   public function unqID() {
-    return uniqid(md5(md5(time())));
+    return bin2hex(random_bytes(16));
   }
 
   /**
@@ -42,98 +47,119 @@ class AndyLib{
 
   /**
      * Return zodiak.
-     * @param string $birthday 'Day.Month'
+     * @param string $birthday 'Day.Month', e.g. '5.03' or '05.3'
+     * @return string|false Sign name or false for an invalid date
   */
 
   public function zodiak($birthday) {
-    $birthday = explode('.',$birthday);
-    preg_replace('/^0/',' ',$birthday[1],$birthday[1]);
-    $zodiac = ['21.3|20.4'   => 'Овен',    '21.4|20.5'   => 'Телец',
-               '21.5|21.6'   => 'Близнецы','22.6|22.7'   => 'Рак',
-               '23.7|23.8'   => 'Лев',     '24.8|23.9'   => 'Дева',
-               '24.9|23.10'  => 'Весы',    '24.10|22.11' => 'Скорпион',
-               '23.11|21.12' => 'Стрелец', '22.12|20.1'  => 'Козерог',
-               '21.1|18.2'   => 'Водолей', '18.2|20.3'   => 'Рыбы'];
-    foreach ($zodiac as $key => $value) {
-      $arr = explode('|',$key);
-      $arr1 = explode('.',$arr[0]);
-      $arr2 = explode('.',$arr[1]);
-      if ((intval($arr1[1]) === intval($birthday[1]) && intval($arr1[0]) <= intval($birthday[0])) ||
-         (intval($arr2[1]) === intval($birthday[1]) && intval($arr2[0]) >= intval($birthday[0]))) {
-           return $value;
-         }
+    $parts = explode('.', (string) $birthday);
+    if (count($parts) < 2 || !ctype_digit($parts[0]) || !ctype_digit($parts[1])) return false;
+    $day   = (int) $parts[0];
+    $month = (int) $parts[1];
+    // 2000 is a leap year, so 29.2 is accepted.
+    if (!checkdate($month, $day, 2000)) return false;
+
+    // Start date ('Day.Month') of each sign; a sign lasts until the next one starts.
+    $zodiac = ['21.1'  => 'Водолей',  '19.2'  => 'Рыбы',     '21.3'  => 'Овен',
+               '21.4'  => 'Телец',    '21.5'  => 'Близнецы', '22.6'  => 'Рак',
+               '23.7'  => 'Лев',      '24.8'  => 'Дева',     '24.9'  => 'Весы',
+               '24.10' => 'Скорпион', '23.11' => 'Стрелец',  '22.12' => 'Козерог'];
+    $date   = $month * 100 + $day;
+    $result = 'Козерог';
+    foreach ($zodiac as $start => $sign) {
+      [$startDay, $startMonth] = explode('.', $start);
+      if ($date >= (int) $startMonth * 100 + (int) $startDay) $result = $sign;
     }
-    return false;
+    return $result;
   }
 
   /**
      * Return your name of browser.
-     * @param string $browser Take information from $_SERVER ['HTTP_USER_AGENT']
+     * @param string|null $browser User agent, defaults to $_SERVER['HTTP_USER_AGENT']
   */
 
-  public function getBrowser($browser) {
-    if(strpos($browser, "Firefox")    !== false) $browser = "Mozilla Firefox";
-    elseif(strpos($browser, "Opera")  !== false) $browser = "Opera";
-    elseif(strpos($browser, "Chrome") !== false) $browser = "Google Chrome";
-    elseif(strpos($browser, "MSIE")   !== false) $browser = "Internet Explorer";
-    elseif(strpos($browser, "Safari") !== false) $browser = "Safari";
-    else                                         $browser = "Неизвестный";
-    return $browser;
+  public function getBrowser($browser = null) {
+    $browser = (string) ($browser ?? ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    // Order matters: Edge and Opera UAs contain "Chrome", Chrome UAs contain "Safari".
+    if(strpos($browser, "Edg")          !== false) return "Microsoft Edge";
+    if(strpos($browser, "OPR")          !== false ||
+       strpos($browser, "Opera")        !== false) return "Opera";
+    if(strpos($browser, "Firefox")      !== false ||
+       strpos($browser, "FxiOS")        !== false) return "Mozilla Firefox";
+    if(strpos($browser, "Chrome")       !== false ||
+       strpos($browser, "CriOS")        !== false) return "Google Chrome";
+    if(strpos($browser, "MSIE")         !== false ||
+       strpos($browser, "Trident")      !== false) return "Internet Explorer";
+    if(strpos($browser, "Safari")       !== false) return "Safari";
+    return "Неизвестный";
   }
 
   /**
-     * Return var_dumped in comfortable form.
+     * Print var_dump output in a readable, HTML-safe form.
      * @param mixed $var Take any information
   */
 
   public function dump($var) {
-    echo '<pre>';
+    ob_start();
     var_dump($var);
-    echo '</pre>';
+    echo '<pre>'.htmlspecialchars(ob_get_clean(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</pre>';
   }
 
   /**
-     * Return file or matches if its exists.
+     * Return paths of all files with the given name, searching recursively.
      * @param string $file Name of file
      * @param string $dir  Path of directory
+     * @return string[]
   */
 
   public function findFile($file, $dir) {
-    $dir_hndl = opendir($dir);
+    $found = [];
+    $dir_hndl = @opendir($dir);
+    if ($dir_hndl === false) return $found;
     while (($name = readdir($dir_hndl)) !== false) {
       if ($name == '.' || $name == '..') continue;
-      if (is_dir($dir.'/'.$name)) findFile($file,$dir.'/'.$name);
-      else if (is_file($dir.'/'.$name) && $file === $name) echo $dir.'/'.$name.'<br>';
+      $path = $dir.'/'.$name;
+      if (is_dir($path) && !is_link($path)) $found = array_merge($found, $this->findFile($file, $path));
+      else if (is_file($path) && $file === $name) $found[] = $path;
     }
     closedir($dir_hndl);
+    return $found;
   }
 
   /**
-     * Return directory or matches if its exists.
+     * Return paths of all directories with the given name, searching recursively.
      * @param string $dirr Name of directory
      * @param string $dir  Path of directory
+     * @return string[]
   */
 
   public function findDirectory($dirr, $dir) {
-  $dir_hndl = opendir($dir);
+    $found = [];
+    $dir_hndl = @opendir($dir);
+    if ($dir_hndl === false) return $found;
     while (($name = readdir($dir_hndl)) !== false) {
       if ($name == '.' || $name == '..') continue;
-      if (is_dir($dir.'/'.$name)  && $dirr === $name) echo $dir.'/'.$name.'<br>';
-      if (is_dir($dir.'/'.$name)) findDirectory($dirr,$dir.'/'.$name);
+      $path = $dir.'/'.$name;
+      if (!is_dir($path) || is_link($path)) continue;
+      if ($dirr === $name) $found[] = $path;
+      $found = array_merge($found, $this->findDirectory($dirr, $path));
     }
     closedir($dir_hndl);
+    return $found;
   }
 
   /**
      * Show Message.
-     * @param array $arr where $key is name of class, $val is value of div
+     * @param array $arr    where $key is name of class, $val is value of div
+     * @param bool  $escape Escape $val; pass false only for trusted HTML
   */
 
-  public function showMsg($arr) {
+  public function showMsg($arr, $escape = true) {
     $body = '';
     if (!empty($arr)) {
       foreach($arr as $key => $val) {
-        $body .= '<div class="'.$key.'">'.$val.'</div>';
+        $content = $escape ? $this->escape($val) : $val;
+        $body .= '<div class="'.$this->escape($key).'">'.$content.'</div>';
       }
       $callback  = <<<HTML
         <div class="header"></div>
@@ -148,29 +174,28 @@ HTML;
   }
 
   /**
-     * Generate unique code
+     * Generate random code of 4 to 7 alphanumeric chars (cryptographically random).
   */
 
   public function generateCode() {
-    $string = 'abcdefghijklmnopqrstuvwyzABCDEFGHIJKLMNOPQRSTUVWYZ0123456789';
-    $count = rand(4,7);
+    $string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $count = random_int(4, 7);
+    $max = strlen($string) - 1;
     $str = '';
-    $length = strlen($string);
     for($i = 0;$i < $count;$i++){
-      $str .= substr($string,rand(1,$length),1);
+      $str .= $string[random_int(0, $max)];
     }
-    $arr = explode(',',$str);
-    shuffle($arr);
-    return implode('',$arr);
+    return $str;
   }
 
   /**
-    * Return string without &amp;
+    * Return url with bare & escaped as &amp; for use in HTML.
+    * Existing entities (&amp;, &#123;, ...) are left as is, so the call is idempotent.
     * @param string $sUrl url
   */
 
   public function cleanAmp($sUrl) {
-    return str_replace('&', '&amp;', $sUrl);
+    return preg_replace('/&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#[xX][0-9a-fA-F]+);)/', '&amp;', (string) $sUrl);
   }
 
   /**
@@ -178,114 +203,116 @@ HTML;
     * @param integer $day day
     * @param integer $month month
     * @param integer $year year
+    * @return integer|false Age in full years, false for an invalid or future date
   */
 
   public function getAge($day, $month, $year) {
-    if ($month > date('m') || ($month == date('m') && $day > date('d'))) return (date('Y') - $year - 1);
-    else return (date('Y') - $year);
+    $day = (int) $day; $month = (int) $month; $year = (int) $year;
+    if (!checkdate($month, $day, $year)) return false;
+    $birthday = (new DateTimeImmutable())->setDate($year, $month, $day)->setTime(0, 0);
+    $today = new DateTimeImmutable('today');
+    if ($birthday > $today) return false;
+    return $birthday->diff($today)->y;
   }
 
   /**
-    * Return ip
+    * Return client ip (REMOTE_ADDR, IPv4 or IPv6) or 'localhost' if it is missing or invalid.
+    * Proxy headers like X-Forwarded-For are ignored on purpose: they are client-controlled.
   */
 
   public function getIp() {
-    if      (filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV4)) return filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV4);
-    else if (filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV6)) return filter_var($SERVER['REMOTE_ADDR'],FILTER_FLAG_IPV4,FILTER_FLAG_IPV6);
-    else return 'localhost';
+    $ip = filter_var($_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP);
+    return $ip !== false ? $ip : 'localhost';
   }
 
   /**
-    * Return current host
+    * Return current host without scheme, leading "www." and path, lowercased.
   */
 
   public function getHost() {
-    $Url = $_SERVER['HTTP_HOST'];
-    $url = str_replace('https://','',$Url);
-    $url = str_replace('http://','',$Url);
-    $url = str_replace('www.','',$Url);
+    $url = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    $url = preg_replace('#^https?://#i', '', $url);
+    $url = preg_replace('/^www\./i', '', $url);
     $eX = explode('/',$url);
     return mb_strtolower($eX[0]);
   }
 
   /**
     * Set cache;
-    * @param string $name name of cache file
-    * @param array  $arr array with information
-    * @param string $conf path to cache file
-    * @param integer $time time of rewrite cache
+    * @param string  $name name of cache file (letters, digits, "_", "-", ".")
+    * @param mixed   $arr  any JSON-serializable value
+    * @param string  $conf path to cache directory
+    * @param integer $time lifetime of cache in minutes
+    * @return bool
   */
 
-  public function setCache($name, $arr, $conf = '../localhost/cache/', $time = 30) {
-    if (!is_dir($conf)) mkdir($conf, 0750, true);
-    if (is_array($arr) || is_int($arr)) {
-      if (file_exists($conf.$name.'.sys') && (filemtime($conf.$name.'.sys') > (time() - 60 * $time))) @file_put_contents($conf.$name.'.sys',serialize($arr));
-      else {
-        $fp = fopen($conf.$name.'.sys', 'wb+');
-        fwrite($fp, serialize($arr));
-        fclose($fp);
-        @chmod($conf.$name.'.sys',0666);
-      }
-    }
+  public function setCache($name, $arr, $conf = __DIR__.'/../localhost/cache/', $time = 30) {
+    $path = $this->storagePath($conf, $name, '.sys');
+    if ($path === false || !$this->ensureDir($conf)) return false;
+    $json = json_encode(['expires' => time() + 60 * (int) $time, 'data' => $arr]);
+    if ($json === false) return false;
+    return file_put_contents($path, $json, LOCK_EX) !== false;
   }
 
   /**
     * Get cache;
     * @param string $name name of cache file
-    * @param array  $arr array with information
+    * @param string $conf path to cache directory
+    * @return mixed Cached value, or false if missing or expired
   */
 
-  public function getCache($name, $conf = '../localhost/cache/') {
-    if (!is_dir($conf)) return false;
-    if (file_exists($conf.$name.'.sys')) {
-      $data = @file_get_contents($conf.$name.'.sys');
-      if ($data) {
-        return unserialize($data);
-      }
+  public function getCache($name, $conf = __DIR__.'/../localhost/cache/') {
+    $path = $this->storagePath($conf, $name, '.sys');
+    if ($path === false || !is_file($path)) return false;
+    $data = json_decode((string) @file_get_contents($path), true);
+    if (!is_array($data) || !array_key_exists('data', $data)) return false;
+    if (time() >= (int) ($data['expires'] ?? 0)) {
+      @unlink($path);
+      return false;
     }
-    return false;
+    return $data['data'];
   }
 
   /**
-    * Writing logs
+    * Writing logs: appends one JSON object per line.
     * @param string  $name name of log file
     * @param string  $msg log information
-    * @param string  $conf path to log file
+    * @param string  $conf path to log directory
+    * @return bool
   */
 
-  public function logs($name, $msg, $conf = '../localhost/logs/') {
-    $path = $conf.$name.'.log';
-    if (!is_dir($conf)) mkdir($conf, 0750, true);
-    if (file_exists($path)) $array = unserialize(@file_get_contents($path));
-    else {
-      $fp = fopen($path, 'wb+');
-      fclose($fp);
-      @chmod($path,0666);
-    }
-    $array[] = ['message' => $msq,'ip' => get_ip(),'browser' => getBrowser($_SERVER['HTTP_USER_AGENT']),
-                'file' => $_SERVER['PHP_SELF'],'query' => $_SERVER['HTTP_REFERER'],'time' => time()];
-
-    $array = serialize($array);
-    @file_put_contents($path,$array);
+  public function logs($name, $msg, $conf = __DIR__.'/../localhost/logs/') {
+    $path = $this->storagePath($conf, $name, '.log');
+    if ($path === false || !$this->ensureDir($conf)) return false;
+    $entry = ['message' => $msg,
+              'ip'      => $this->getIp(),
+              'browser' => $this->getBrowser($_SERVER['HTTP_USER_AGENT'] ?? ''),
+              'file'    => $_SERVER['PHP_SELF'] ?? '',
+              'query'   => $_SERVER['HTTP_REFERER'] ?? '',
+              'time'    => time()];
+    $line = json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    if ($line === false) return false;
+    return file_put_contents($path, $line."\n", FILE_APPEND | LOCK_EX) !== false;
   }
 
   /**
     * Return tags
-    * @param string  $tagName name of tag
-    * @param string  $string info inside tag
-    * @param string  $class name of class
+    * @param string       $tagName div, span, img, link or h1-h6
+    * @param string       $string  text inside tag, img src or link href
+    * @param string|array $class   class name(s); for link it is the rel value (default "stylesheet")
+    * @param bool         $escape  escape tag content; pass false only for trusted HTML
   */
 
-  public function htmlTags($tagName, $string = '', $class = '') {
-    if(is_array($class))                   $class = implode(' ',$class);
-    if($class != '' && $tagName != 'link') $class = "class='{$class}'";
+  public function htmlTags($tagName, $string = '', $class = '', $escape = true) {
+    if(is_array($class)) $class = implode(' ',$class);
+    $class = (string) $class;
 
-         if($tagName == 'div')  return "<div {$class}>{$string}</div>";
-    else if($tagName == 'span') return "<span {$class}>{$string}</span>";
-    else if($tagName == 'img')  return "<img src='{$string}' {$class}/>";
-    else if($tagName == 'link') return "<link {$class} href='{$string}'/>";
-    else if(preg_match('/h[1-6]/',$tagName,$match)) return "<{$match[0]} {$class}>{$string}</{$match[0]}>";
-    else return false;
+    if($tagName == 'img')  return "<img src='{$this->escape($string)}'".$this->attr('class', $class)."/>";
+    if($tagName == 'link') return "<link rel='".$this->escape($class !== '' ? $class : 'stylesheet')."' href='{$this->escape($string)}'/>";
+    if(!in_array($tagName, ['div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'], true)) return false;
+
+    $content = $escape ? $this->escape($string) : $string;
+    return "<{$tagName}".$this->attr('class', $class).">{$content}</{$tagName}>";
   }
 
   /**
@@ -334,106 +361,104 @@ HTML;
   */
 
   public function has_ssl() {
-     if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')) return true;
-     else return false;
+    return !empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off';
   }
 
   /**
-    * Return array with information from .xlsx file
-    * @param array   $arr recursive or normal array
-    * @param string  $dir  name of directory where PHPExcel file located
-    * @param string  $file name of xlsx file
-    * @param string  $dir  name of directory where PHPExcel file located
-    * @param string  $file name of xlsx file
+    * Set a value deep inside an array, creating missing levels.
+    * @param array  $arr        array to change (by reference)
+    * @param array  $arr_keys   path of keys; ['main'] means the root of $arr
+    * @param string $main_key   key to set at the end of the path
+    * @param mixed  $main_value value to set; '' or null sets an empty array
+    * @throws InvalidArgumentException When a key on the path holds a non-array value
   */
 
-  public function insertArrRecursive(&$arr,$arr_keys,$main_key,$main_value = '',$tempArr = '') {
-    if ($arr_keys[0] == 'main') {
-      if(empty($main_value)) $arr[$main_key]  = [];
-      else                   $arr[$main_key]  = $main_value;
-      return;
-    }
-    foreach ($arr_keys as $key => $value) {
-      if (empty($tempArr)) $tempArr = &$arr[$value];
-      else                $tempArr = &$tempArr[$value];
-      if ($value == end($arr_keys)) {
-        if (empty($main_value))  $tempArr[$main_key] = [];
-        else                    $tempArr[$main_key] = $main_value;
-        return;
+  public function insertArrRecursive(&$arr, $arr_keys, $main_key, $main_value = '') {
+    $node = &$arr;
+    $arr_keys = array_values((array) $arr_keys);
+    if (($arr_keys[0] ?? null) !== 'main') {
+      foreach ($arr_keys as $key) {
+        if (!isset($node[$key])) $node[$key] = [];
+        else if (!is_array($node[$key])) throw new InvalidArgumentException("Key '{$key}' does not hold an array");
+        $node = &$node[$key];
       }
     }
+    $node[$main_key] = ($main_value === '' || $main_value === null) ? [] : $main_value;
   }
 
   /**
-    * Return chain of keys for select
-    * @param array   $arr  recursive or normal array
-    * @param array   $newArr  array with chain of keys
+    * Flatten a nested array into chains of keys, e.g. ['a' => ['b' => 1]] gives ['[a][b]' => 1].
+    * @param array  $arr    recursive or normal array
+    * @param string $prefix chain of parent keys, used by the recursion
+    * @return array
   */
 
-  public function keysArr($arr, $newArr = [], $str = [], $counter = 1) {
+  public function keysArr($arr, $prefix = '') {
+    $newArr = [];
     foreach ($arr as $key => $val) {
-      if (!is_array($val)) {
-        array_push($str,"[".$key."]");
-        $newArr[implode('',$str)] = $val;
-        if ($counter > 1) array_pop($str);
-        else if (count($str) >= 1 && $counter == 1) array_pop($str);
-      }
-      else if (is_array($val)) {
-        array_push($str,"[".$key."]");
-        $bigArr  = keysArr($val,$newArr,$str,++$counter);
-        $newArr  = array_merge($newArr,$bigArr[0]);
-        $str     = $bigArr[1];
-        $counter = $bigArr[2];
-        if($counter > 1)  array_pop($str);
-        --$counter;
-      }
+      $chain = $prefix.'['.$key.']';
+      if (is_array($val)) $newArr += $this->keysArr($val, $chain);
+      else                $newArr[$chain] = $val;
     }
-    if ($counter == 1) return $newArr;
-    else return [$newArr,$str,$counter];
+    return $newArr;
   }
 
   /**
-    * Set new array in .php file
+    * Save array as a .php config file that sets the variable $namec.
+    * Keys already set in $namec when the file is included win over the saved ones.
     * @param array    $save_con   array
     * @param string   $file  name of file
-    * @param string   $namec  new name of file
     * @param string   $dir  path to file
+    * @param string   $namec  name of variable, defaults to $file
+    * @return bool
+    * @throws InvalidArgumentException When the variable name is not a valid PHP identifier
   */
 
   public function savetheConfig($save_con, $file, $dir, $namec=false) {
     $namec = $namec?$namec:$file;
-    $find = array();
-    $replace = array();
-
-    $find[] = "'\r'";
-    $replace[] = "";
-    $find[] = "'\n'";
-    $replace[] = "";
-
-    $handler = fopen($dir.$file, "w");
-    fwrite($handler, "<?php\n\${$namec} += array (\n");
-    foreach ($save_con as $name => $value) {
-      $value = str_replace("$", "&#036;", $value);
-      $value = str_replace("{", "&#123;", $value);
-      $value = str_replace("}", "&#125;", $value);
-      $value = str_replace(chr(0), "", $value);
-      $value = str_replace(chr(92), "", $value);
-      $value = str_ireplace("base64_decode", "base64_dec&#111;de", $value);
-      $value = addslashes($value);
-
-      $name = str_replace("$", "&#036;", $name);
-      $name = str_replace("{", "&#123;", $name);
-      $name = str_replace("}", "&#125;", $name);
-      $name = str_replace(chr(0), "", $name);
-      $name = str_replace(chr(92), "", $name);
-      $name = str_replace('(', "", $name);
-      $name = str_replace(')', "", $name);
-      $name = str_ireplace("base64_decode", "base64_dec&#111;de", $name);
-
-      fwrite($handler, "\t'{$name}' => '{$value}',\n");
+    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $namec) || $namec === 'this') {
+      throw new InvalidArgumentException('Config name must be a valid PHP variable name');
     }
-    fwrite($handler, ");\n\n?>");
-    fclose($handler);
+    $code = "<?php\n\${$namec} = (\${$namec} ?? []) + ".var_export((array) $save_con, true).";\n";
+
+    // Write to a temp file and rename it, so a half-written config is never included.
+    $target = $dir.$file;
+    $tmp = $target.'.'.bin2hex(random_bytes(4)).'.tmp';
+    if (file_put_contents($tmp, $code, LOCK_EX) === false) return false;
+    if (!rename($tmp, $target)) {
+      @unlink($tmp);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+    * Escape a value for HTML text or a quoted attribute.
+  */
+
+  protected function escape($value) {
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+  }
+
+  /**
+    * Return ` name='value'` or an empty string when the value is empty.
+  */
+
+  protected function attr($name, $value) {
+    return $value === '' ? '' : " {$name}='{$this->escape($value)}'";
+  }
+
+  /**
+    * Return file path inside $dir, or false when $name could escape the directory.
+  */
+
+  protected function storagePath($dir, $name, $ext) {
+    $name = (string) $name;
+    if (!preg_match('/^[A-Za-z0-9_.-]+$/', $name) || strpos($name, '..') !== false) return false;
+    return rtrim((string) $dir, '/\\').'/'.$name.$ext;
+  }
+
+  protected function ensureDir($dir) {
+    return is_dir($dir) || @mkdir($dir, 0750, true) || is_dir($dir);
   }
 }
-?>

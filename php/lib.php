@@ -326,32 +326,29 @@ HTML;
   }
 
   /**
-    * Return array with information from .xlsx file
-    * @param string  $file name of xlsx file
-    * @param string  $dir  name of directory where PHPExcel file located
+    * Return cells of the first sheet of an .xlsx file as [row number][column letter] => value.
+    * Requires phpoffice/phpspreadsheet (composer require phpoffice/phpspreadsheet).
+    * @param string      $file     path to xlsx file
+    * @param string|null $autoload autoload file to require when PhpSpreadsheet is not loaded yet
+    * @throws RuntimeException When PhpSpreadsheet is not available
   */
 
-  public function importXlsx($file, $dir = ENGINE_DIR."/lib/phpexcel/PHPExcel.php") {
-    require_once $dir;
-    $getFile = PHPExcel_IOFactory::load($file);
-    $getFile->setActiveSheetIndex(0);
-    $aSheet = $getFile->getActiveSheet();
+  public function importXlsx($file, $autoload = null) {
+    $factory = 'PhpOffice\\PhpSpreadsheet\\IOFactory';
+    if ($autoload !== null && !class_exists($factory)) require_once $autoload;
+    if (!class_exists($factory)) {
+      throw new RuntimeException('importXlsx needs phpoffice/phpspreadsheet: composer require phpoffice/phpspreadsheet');
+    }
+    $aSheet = $factory::load($file)->getSheet(0);
 
     $array = [];
-    $iRow = 0;
     foreach ($aSheet->getRowIterator() as $row) {
-        $iRow++;
-        $cellIterator = $row->getCellIterator();
-        $iCell = 0;
-        foreach ($cellIterator as $key=>$cell) {
-            $iCell++;
-            if($cell->getValue() instanceof PHPExcel_RichText) {
-                $val = $cell->getValue()->getPlainText();
-            } else {
-                $val = $cell->getValue();
-            }
-            $array[$iRow][$key] = $val?$val:'';
-        }
+      $iRow = $row->getRowIndex();
+      foreach ($row->getCellIterator() as $key => $cell) {
+        $val = $cell->getValue();
+        if ($val instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) $val = $val->getPlainText();
+        $array[$iRow][$key] = $val ?? '';
+      }
     }
     return $array;
   }

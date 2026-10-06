@@ -1,0 +1,24 @@
+{
+    "name": "marunyak/library",
+    "description": "Personal utility libraries (PHP and JS).",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpoffice/phpspreadsheet": "^5.0"
+    },
+    "suggest": {
+        "phpoffice/phpspreadsheet": "Required by AndyLib::importXlsx()"
+    },
+    "autoload": {
+        "classmap": [
+            "php/lib.php"
+        ]
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
